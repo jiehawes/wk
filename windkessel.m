@@ -146,5 +146,6 @@ plot(t2s, P2s, 'r -.*', t2d, P2d, 'b-o', t2, P2, 'm-s', t3, P3, 'g-x',...
     'LineWidth', 2, 'MarkerSize', 5);
 legend ('2 element WM-Analytical (Systolic)',...
     '2 element WM-Analytical (Diastolic)', '2 element WM', '3 element WM');
+title('Comparison between numerical and analytical solution');
 ylim([0, 150]);
 xlim([0, Tc]);
