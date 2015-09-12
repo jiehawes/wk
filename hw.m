@@ -1,6 +1,6 @@
 close all;
 clear all;
-Colour = hsv;
+Colour = hsv;  % colours for plots
 
 % Parameters for 2 element Windkessel Model
 R = 0.95000;  % mmHg/cm^3/s, systemic peripheral resistance
