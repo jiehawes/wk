@@ -3,20 +3,22 @@ clear all;
 Colour = hsv;  % colours for plots
 
 % Parameters for 2 element Windkessel Model
-R = 0.95000;  % mmHg/cm^3/s, systemic peripheral resistance
+R = 0.9500;  % mmHg/cm^3/s, systemic peripheral resistance
 C = 1.0666;  % cm^3/mmHg, systemic arterial compliance
 
 % Simulation options, refine step size for ODE solver
-options = odeset('Refine', 16);
+options = odeset('Refine', 1);
+% scaling factor to increase blood flow for first cycle to get 0 to 120 mmHg
+start_fac = 1.1;
 
 %% Assumptions
 Tc = 60 / 72;  % s, period of cardia cycle, 72 beats per second
 Ts = (2 / 5) * Tc;  % s, period of systole
-cycle = 5;  % number of cardiac cycles for which WM is analysed
+cycle = 20;  % number of cardiac cycles for which WM is analysed
 
 %% Modelling blood flow to the aorta
 % Blood flow in one cardiac cycle is 70mL. Max amplitude of blood flow
-% according to our sinusoidal wave model is 329.9 mL
+% according to the sinusoidal wave model is 329.9 mL/s
 % Ganong's Review of Medical Physiology 24e http://accessmedicine.
 % mhmedical.com.libproxy1.nus.edu.sg/content.aspx?bookid=393&sectionid=
 % 39736776
@@ -42,8 +44,8 @@ for n = 1:cycle
   xlabel('time (s)');
   % Initial conditions all models
   if (n == 1)
-    P_ss = 80;
-    P_ss2 = 80;
+    P_ss = 0;
+    P_ss2 = 0;
   end
 
   %% Analytical solution
@@ -72,7 +74,8 @@ for n = 1:cycle
 
   %% Numerical Solution for 2 Element WM
   t = (n - 1) * Tc : 0.01 : n * Tc;
-  Q = @(t) Q_0 * sine(t - (n - 1) * Tc) .* (t <= ((n - 1) * Tc + Ts));
+  Q = @(t) (start_fac * (n == 1) + 1.0) * Q_0 * sine(t - (n - 1) * Tc) .*...
+      (t <= ((n - 1) * Tc + Ts));
   Y2 = @(t, y2) (-y2 / (R * C) + Q(t) / C);
   [t_m2, P_m2] = ode113(Y2, [(n - 1) * Tc; n * Tc], P_ss2, options);
   P_ss2 = P_m2(end);
@@ -87,10 +90,10 @@ for n = 1:cycle
 
   %% Extracting the Blood pressure values for all model for one cycle
   if (n == 1)
-    t2s = ts;
-    P2s = P_s(ts); % Analytical solution for Systole
-    t2d = td;
-    P2d = P_d(td); % Analytical solution for Diastole
+    % t2s = ts;
+    % P2s = P_s(ts); % Analytical solution for Systole
+    % t2d = td;
+    % P2d = P_d(td); % Analytical solution for Diastole
     t2 = t_m2;
     P2 = P_m2; % Numerical solution for 2 element WM
   end
@@ -102,11 +105,13 @@ figure(3);
 for i = 1:3
   for n = 1:cycle
     if (n == 1)
-      P_ss = 80;
+      P_ss = 0;
     end
+    multiple = 1.0 + 0.1 * (i - 1);
     t_m = (n - 1) * Tc : 0.01 : n * Tc;
-    Q = @(t) Q_0 * sine(t - (n - 1) * Tc) .* (t <= ((n - 1) * Tc + Ts));
-    Y_C = @(t, y2) (-y2 / (R * i * C) + Q(t) / C / i);
+    Q = @(t) (start_fac * (n == 1) + 1.0) * Q_0 * sine(t - (n - 1) * Tc) .*...
+        (t <= ((n - 1) * Tc + Ts));
+    Y_C = @(t, y2) (-y2 / (R * multiple * C) + Q(t) / C / multiple);
     [t_m, P_m] = ode113(Y_C, [(n - 1) * Tc; n * Tc], P_ss, options);
     P_ss = P_m(end);
     plot(t_m, P_m, 'Color', Colour(i * 5, :));
@@ -124,11 +129,13 @@ figure(4);
 for i = 1:3
   for n = 1:cycle
     if (n == 1)
-      P_ss = 80;
+      P_ss = 0;
     end
+    multiple = 1.0 + 0.1 * (i - 1);
     t_m = (n - 1) * Tc : 0.01 : n * Tc;
-    Q = @(t) Q_0 * sine(t - (n - 1) * Tc) .* (t <= ((n - 1) * Tc + Ts));
-    Y_R = @(t, y2) (-y2 / (R * i * C) + Q(t) / C);
+    Q = @(t) (start_fac * (n == 1) + 1.0) * Q_0 * sine(t - (n - 1) * Tc) .*...
+        (t <= ((n - 1) * Tc + Ts));
+    Y_R = @(t, y2) (-y2 / (R * multiple * C) + Q(t) / C);
     [t_m, P_m] = ode113(Y_R, [(n - 1) * Tc; n * Tc], P_ss, options);
     P_ss = P_m(end);
     plot(t_m, P_m, 'Color', Colour(i * 5, :));
@@ -142,13 +149,13 @@ for i = 1:3
 end
 
 %% Comparison of WM and analytical Solutions
-figure(5);
-hold on;
-plot(t2s, P2s, 'r -.*',  'LineWidth', 2, 'MarkerSize', 5);
-plot(t2d, P2d, 'b-o',  'LineWidth', 2, 'MarkerSize', 5);
-plot(t2, P2, 'm-s',  'LineWidth', 2, 'MarkerSize', 5);
-legend ('2 element WM-Analytical (Systolic)',...
-    '2 element WM-Analytical (Diastolic)', '2 element WM');
-title('Comparison between numerical and analytical solution');
-ylim([0, 150]);
-xlim([0, Tc]);
+% figure(5);
+% hold on;
+% plot(t2s, P2s, 'r -.*',  'LineWidth', 2, 'MarkerSize', 5);
+% plot(t2d, P2d, 'b-o',  'LineWidth', 2, 'MarkerSize', 5);
+% plot(t2, P2, 'm-s',  'LineWidth', 2, 'MarkerSize', 5);
+% legend ('2 element WM-Analytical (Systolic)',...
+%     '2 element WM-Analytical (Diastolic)', '2 element WM');
+% title('Comparison between numerical and analytical solution');
+% ylim([0, 150]);
+% xlim([0, Tc]);
