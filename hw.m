@@ -214,9 +214,55 @@ Q = @(t) Q_0 * sine(t) .* (t <= Ts);
 % xlabel('Time (s)');
 % legend('R^{-1}', 'R^0', 'R^{+1}');
 
+% scaling = 1.2;
+% figure(1);
+% for i = 1:2
+%   for n = 1:cycle
+%     if (n == 1)
+%       P_ss = 0;
+%     end
+%     t_m = (n - 1) * Tc : 0.01 : n * Tc;
+%     Q = @(t) (scale_fac * (n == 1) + 1.0) * Q_0 * sine(t - (n - 1) * Tc) .*...
+%         (t <= ((n - 1) * Tc + Ts));
+%     if (i == 1)
+%       Y_R = @(t, y2) (-y2 / (R * 0.8 * C * 1.2) + Q(t) / C / 1.2);
+%     else
+%       Y_R = @(t, y2) (-y2 / (R * 1.2 * C * 0.8) + Q(t) / C / 0.8);
+%     end
+%     [t_m, P_m] = ode113(Y_R, [(n - 1) * Tc; n * Tc], P_ss, options);
+%     P_ss = P_m(end);
+%     plot(t_m, P_m, 'Color', Colour(i * 5, :));
+%     if (i == 1)
+%       if (n == 1)
+%         P1 = P_m;
+%         T1 = t_m;
+%       else
+%         P1 = [P1; P_m];
+%         T1 = [T1; t_m];
+%       end
+%     else
+%       if (n == 1)
+%         P2 = P_m;
+%         T2 = t_m;
+%       else
+%         P2 = [P2; P_m];
+%         T2 = [T2; t_m];
+%       end
+%     end
+%   end
+% end
+% plot(T1, P1, 'b-', T2, P2, 'r-');
+% ylim([0, 200]);
+% xlim([0, 17]);
+% title('Aortic blood pressure in healthy and unhealthy individuals');
+% ylabel('Pressure (mmHg)');
+% xlabel('Time (s)');
+% legend('Healthy', 'Unhealthy');
+
 scaling = 1.2;
 figure(1);
 for i = 1:2
+  vary_fac = 0.8 + 0.4 * (i - 1);
   for n = 1:cycle
     if (n == 1)
       P_ss = 0;
@@ -225,13 +271,12 @@ for i = 1:2
     Q = @(t) (scale_fac * (n == 1) + 1.0) * Q_0 * sine(t - (n - 1) * Tc) .*...
         (t <= ((n - 1) * Tc + Ts));
     if (i == 1)
-      Y_R = @(t, y2) (-y2 / (R * 0.8 * C * 1.2) + Q(t) / C / 1.2);
+      Y_R = @(t, y2) (-y2 / (R * vary_fac * C * vary_fac) + Q(t) / C / vary_fac);
     else
-      Y_R = @(t, y2) (-y2 / (R * 1.2 * C * 0.8) + Q(t) / C / 0.8);
+      Y_R = @(t, y2) (-y2 / (R * vary_fac * C * vary_fac) + Q(t) / C / vary_fac);
     end
     [t_m, P_m] = ode113(Y_R, [(n - 1) * Tc; n * Tc], P_ss, options);
     P_ss = P_m(end);
-    plot(t_m, P_m, 'Color', Colour(i * 5, :));
     if (i == 1)
       if (n == 1)
         P1 = P_m;
@@ -240,7 +285,7 @@ for i = 1:2
         P1 = [P1; P_m];
         T1 = [T1; t_m];
       end
-    else
+    elseif (i == 2)
       if (n == 1)
         P2 = P_m;
         T2 = t_m;
@@ -248,13 +293,42 @@ for i = 1:2
         P2 = [P2; P_m];
         T2 = [T2; t_m];
       end
+    % elseif (i == 3)
+    %   if (n == 1)
+    %     P3 = P_m;
+    %     T3 = t_m;
+    %   else
+    %     P3 = [P3; P_m];
+    %     T3 = [T3; t_m];
+    %   end
+    % elseif (i == 4)
+    %   if (n == 1)
+    %     P4 = P_m;
+    %     T4 = t_m;
+    %   else
+    %     P4 = [P4; P_m];
+    %     T4 = [T4; t_m];
+    %   end
+    % else
+    %   if (n == 1)
+    %     P5 = P_m;
+    %     T5 = t_m;
+    %   else
+    %     P5 = [P5; P_m];
+    %     T5 = [T5; t_m];
+    %   end
     end
   end
 end
-plot(T1, P1, 'b-', T2, P2, 'r-');
-ylim([0, 200]);
+dy1 = diff(P1)./diff(T1);
+dy2 = diff(P2)./diff(T2);
+% plot(T1, P1, 'b-');
+plot(T1(2:end), dy1, 'b-');
+hold on;
+plot(T2(2:end), dy2, 'r-');
+% ylim([0, 200]);
 xlim([0, 17]);
-title('Aortic blood pressure in healthy and unhealthy individuals');
-ylabel('Pressure (mmHg)');
+title('Rate of change in pressure against time');
+ylabel('Rate of change in pressure (mmHg/s)');
 xlabel('Time (s)');
-legend('Healthy', 'Unhealthy');
+legend('R^{-1}C^{-1}', 'R^{+1}C^{+1}');
