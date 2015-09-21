@@ -320,14 +320,18 @@ for i = 1:2
     end
   end
 end
-dy1 = diff(P1)./diff(T1);
-dy2 = diff(P2)./diff(T2);
-% plot(T1, P1, 'b-');
-plot(T1(2:end), dy1, 'b-');
-hold on;
-plot(T2(2:end), dy2, 'r-');
+% dy1 = diff(P1)./diff(T1);
+% dy2 = diff(P2)./diff(T2);
+pp2 = (max(P2) - min(P2(5000:end, 1)))/2;
+pp1 = (max(P1) - min(P1(5000:end, 1)))/2;
+norm_against1 = (max(P1) + min(P1(5000:end, 1)))/2;
+norm_against2 = (max(P2) + min(P2(5000:end, 1)))/2;
+plot(T1, (P1-norm_against1)/pp1, 'b-', T2, (P2-norm_against2)/pp2, 'r-');
+% plot(T1(2:end), dy1, 'b-');
+% hold on;
+% plot(T2(2:end), dy2, 'r-');
 % ylim([0, 200]);
-xlim([0, 17]);
+xlim([5, 17]);
 title('Rate of change in pressure against time');
 ylabel('Rate of change in pressure (mmHg/s)');
 xlabel('Time (s)');
