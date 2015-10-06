@@ -82,18 +82,17 @@ for n = 1:cycle
   end
 end
 
-plot(T, P, 'LineWidth', 2);
-hold on;
-plot(T2, P2, 'LineWidth', 2);
+plot(T, P, T2, P2, 'LineWidth', 2);
 % hold on;
 % plot(T3, P3, 'LineWidth', 2);
 disp(P_ss);
 disp(max(P));
 ylim([0, 150]);
 xlim([0, n * Tc]);
-title('Aortic Blood Pressure (Numerical 3 Element WM)');
+title('Blood pressure vs time');
 ylabel('Pressure (mmHg)');
 xlabel('time (s)');
+legend('WK3', 'WK4', 'Location', 'northeastoutside');
 % Write to .dat file
 dlmwrite('wk.dat', [T P], 'delimiter', ' ');
 dlmwrite('wk1.dat', [t_m P_m], 'delimiter', ' ');
